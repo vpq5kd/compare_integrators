@@ -211,51 +211,54 @@ def compute_error(numerical, exact):
 if __name__ == "__main__":
     import sys
     # Create high precision integrator
+    if len(sys.argv)==1: order=10
+    else:
+        order=int(sys.argv[1])
     #print(f"Creating {order}-point Gaussian quadrature with high precision...")
     #gauss_hp = HighPrecisionGaussInt(order, precision=40)
     #gauss_hp.PrintWA()
-    exact = 1 - np.exp(-1)
-
-    N = [2,4,8,16,32,64,128]
+    #exact = (-np.cos(100)+np.cos(1))*(1/100)
+    exact = 1
+    N = [2,10, 20, 40, 80, 160, 320]
 
     error_gauss_list = []
     error_trap_list = []
     error_simp_list = []
     n_log_list = []
+
+    def function(x):
+      return x**2
     for n in N:
-        gauss_hp = HighPrecisionGaussInt(n, precision=15)
-        numerical_gauss = gauss_hp.integ(lambda x: np.exp(-x), 0, 1)
+        a = -1
+        b = 1
+        order = n
+        gauss_hp = HighPrecisionGaussInt(order, precision=15)
+        numerical_gauss = gauss_hp.integ(lambda x: function(x), a, b)
         error_gauss = compute_error(numerical_gauss, exact)
-        numerical_trap = integ_trap(lambda x: np.exp(-x), 0, 1, n)
+        numerical_trap = integ_trap(lambda x:function(x), a, b, n)
         error_trap = compute_error(numerical_trap, exact)
-        numerical_simp = integ_simp(lambda x: np.exp(-x), 0, 1, n)
+        numerical_simp = integ_simp(lambda x: function(x), a, b, n)
         error_simp = compute_error(numerical_simp, exact)
 
 
-        if error_simp != 0:
-          error_simp_list.append((error_simp))
-        elif error_simp == 0.0:
-          error_simp_list.append(0)
-        if error_trap != 0:
-          error_trap_list.append((error_trap))
-        elif error_trap == 0.0:
-          error_trap_list.append(0)
-        if error_gauss != 0:
-          error_gauss_list.append((error_gauss))
-        elif error_gauss == 0.0:
-          error_gauss_list.append(0)
-        n_log_list.append(np.log10(n))
+        error_simp_list.append((error_simp))
+        error_trap_list.append((error_trap))
+        error_gauss_list.append((error_gauss))
+        n_log_list.append((n))
         print(f"N: {n} - Error (gauss): {error_gauss} - Error (simpson's): {error_simp} - Error (trapezoidal): {error_trap}")
 
-
+    print(n_log_list)
+    print(error_gauss_list)
+    print(error_simp_list)
+    print(error_trap_list)
+    plt.title(r"$\log_{10}(N)$ vs $\log_10(|error|)$ for Various Numerical Integration Methods Acting on $\int_{-1}^{1}\sqrt{x^2}dx$")
     plt.style.use("dark_background")
-    plt.title(r"$\log_{10}(N)$ vs $\log_{10}(|error|)$ for Various Numerical Integration Methods Acting on $\int_{0}^{1}e^{-x}dx$")
-    plt.loglog(N, error_gauss_list, label="Gaussian Quadrature", color = "magenta")
-    plt.loglog(N, error_simp_list, label="Simpson's Rule", color = "cyan")
-    plt.loglog(N, error_trap_list, label="Trapezoidal Rule", color = "orange")
+    plt.loglog(n_log_list, error_gauss_list, label="Gaussian Quadrature", color = "magenta")
+    plt.loglog(n_log_list, error_simp_list, label="Simpson's Rule", color = "cyan")
+    plt.loglog(n_log_list, error_trap_list, label="Trapezoidal Rule", color = "orange")
     plt.xlabel("log10(N)")
     plt.ylabel("log10(Error)")
     plt.legend()
-    plt.savefig("Errors.png")
+    plt.savefig("BadErrors.png")
     plt.show()
     
